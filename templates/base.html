@@ -19,8 +19,8 @@
     <link href="/static/css/iphone-btn-style.css" rel="stylesheet"> 
  
     <!-- Le javascript --> 
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script> 
-    <script src="http://autobahn.tablesorter.com/jquery.tablesorter.min.js"></script> 
+    <script src="/static/js/jquery.1.6.4.min.js"></script> 
+    <script src="/static/js/jquery.tablesorter.min.js"></script> 
     <script src="/static/bootstrap/docs/assets/js/google-code-prettify/prettify.js"></script> 
     <script>$(function () { prettyPrint() })</script> 
     <script src="/static/bootstrap/js/bootstrap-dropdown.js"></script> 
@@ -39,22 +39,6 @@
 
     <!-- spot to insert stuff for google maps -->
     {% block additional-headers %}{% endblock %}
-
-<script type="text/javascript">
-
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-83697-18']);
-  _gaq.push(['_setDomainName', 'formhub.org']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-
-</script>
-
   </head> 
 
   {% block body %}
