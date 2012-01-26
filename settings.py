@@ -164,6 +164,7 @@ LOGGING = {
     }
 }
 
+MAIN_SITE_HOSTNAME = 'localhost'
 
 # 394 - Kaduna/Kachia
 # 732 - Kano/Takai

@@ -28,7 +28,6 @@ csvs
 xform_manager_dataset.json
 
 /data
-local_settings.py
 .~lock.*
 
 # media folder used by tests
