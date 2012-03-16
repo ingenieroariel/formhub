@@ -42,6 +42,6 @@
 				        </coordinates>
 		      		  </Point>
         </Placemark>
-{% endfor %}
+       {% endfor %}
 	</Document>
 </kml>

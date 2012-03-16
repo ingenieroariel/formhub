@@ -206,6 +206,8 @@ def zip_export(request, username, id_string):
     return response
 
 
+from utils import timing
+
 def kml_export(request, username, id_string):
     # read the locations from the database
     context = RequestContext(request)
@@ -220,23 +222,19 @@ def kml_export(request, username, id_string):
     data_for_template = []
     for pi in pis:
         # read the survey instances
-        data = pi.to_dict()
         # get rid of keys with leading underscores
-        data_for_display = {}
-        for k, v in data.items():
-            if not k.startswith(u"_"):
-                data_for_display[k] = v
+        data_for_display = pi.to_dict()
         xpaths = data_for_display.keys()
         xpaths.sort(cmp=pi.data_dictionary.get_xpath_cmp())
-        label_value_pairs = [
-            (pi.data_dictionary.get_label(xpath),
-            data_for_display[xpath]) for xpath in xpaths]
+        label_value_pairs = [(pi.data_dictionary.get_label(xpath),data_for_display[xpath]) for xpath in xpaths]
+        #import pdb; pdb.set_trace();
         table_rows = []
         for key, value in label_value_pairs:
-            table_rows.append('<tr><td>%s</td><td>%s</td></tr>' % (key, value))
+            #if not key.startswith(u"_"):
+                table_rows.append('<tr><td>%s</td><td>%s</td></tr>' % (key, value))
         img_urls = image_urls(pi.instance)
         img_url = img_urls[0] if img_urls else ""
-        data_for_template.append({"name":id_string, "id": pi.id, "lat": pi.lat, "lng": pi.lng,'image_urls': img_urls, "table": '<table border="1"><a href="#"><img width="210" class="thumbnail" src="%s" alt=""></a><%s</table>' % (img_url,''.join(table_rows))})
+        data_for_template.append({"name":id_string, "id": pi.id, "lat": pi.lat, "lng": pi.lng,'image_urls': img_urls, "table": '<table border="1"><a href="#"><img width="210" class="thumbnail" src="%s" alt=""></a>%s</table>' % (img_url,''.join(table_rows))})
     context.data = data_for_template
     response = render_to_response("survey.kml",
         context_instance=context,

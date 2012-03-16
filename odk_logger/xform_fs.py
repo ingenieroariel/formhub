@@ -1,6 +1,7 @@
 import os
 import glob
 import re
+from sqlalchemy import create_engine, MetaData, Table
 
 class XFormInstanceFS(object):
     def __init__(self, filepath):
@@ -64,6 +65,7 @@ class XFormInstanceFS(object):
 
     @property
     def instance_status(self):
+        
         """
         I probably have access to the metadata directory here:
           `self.metadata_directory`
@@ -79,13 +81,26 @@ class XFormInstanceFS(object):
         
         path_to_metadata_file = self.metadata_instance_file(collect_version)
         instance_file_path = self.instance_file_path
+        
+        assert os.path.exists(path_to_metadata_file)
+        
+        
+        def get_table_describing_instance_files():
+            db = create_engine('sqlite:///%s' % path_to_metadata_file)
+            metadata = MetaData()
+            metadata.bind = db
+            return Table('files', metadata, autoload=True)
 
+#        files = get_table_describing_instance_files()
+#        column_names = [c.name for c in files.columns]
+        import pdb;pdb.set_trace();
+        
         # for 1.1.7 (at least)
         # read file: "path_to_metadata_file"
         # find the row where instanceFilePath == "instance_file_path"
         # return the status
-
-        return "i_can_not_haz_status"
+#        return "complete"
+        return instance_file_path
 
     @property
     def _odk_collect_version(self):

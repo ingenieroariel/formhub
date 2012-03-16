@@ -138,7 +138,7 @@ def import_instances_from_zip(zipfile_path, user, default_status="zip_unspecifie
                             content_type="image/jpeg") for jpg in xform_fs.photos]
 
             submission_status = xform_fs.instance_status
-
+#            import pdb;pdb.set_trace();
             if not submission_status:
                 submission_status = default_status
             # todo: if an instance has been submitted make sure all the

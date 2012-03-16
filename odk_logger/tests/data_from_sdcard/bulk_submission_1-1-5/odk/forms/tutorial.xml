@@ -1,0 +1,72 @@
+<h:html xmlns="http://www.w3.org/2002/xforms" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:h="http://www.w3.org/1999/xhtml" xmlns:jr="http://openrosa.org/javarosa" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <h:head>
+    <h:title>tutorial</h:title>
+    <model>
+      <instance>
+        <tutorial id="tutorial">
+          <name/>
+          <age/>
+          <picture/>
+          <has_children/>
+          <gps/>
+          <web_browsers/>
+        </tutorial>
+      </instance>
+      <bind nodeset="/tutorial/name" type="string"/>
+      <bind nodeset="/tutorial/age" type="int"/>
+      <bind nodeset="/tutorial/has_children" type="select1"/>
+      <bind nodeset="/tutorial/gps" type="geopoint"/>
+      <bind constraint="(.='none' or not(selected(., 'none')))" nodeset="/tutorial/web_browsers" type="select"/>
+    </model>
+  </h:head>
+  <h:body>
+    <input ref="/tutorial/name">
+      <label>1. What is your name?</label>
+    </input>
+    <input ref="/tutorial/age">
+      <label>2. How old are you?</label>
+    </input>
+    <upload mediatype="image/*" ref="/tutorial/picture">
+      <label>3. May I take your picture?</label>
+    </upload>
+    <select1 ref="/tutorial/has_children">
+      <label>4. Do you have any children?</label>
+      <item>
+        <label>no</label>
+        <value>0</value>
+      </item>
+      <item>
+        <label>yes</label>
+        <value>1</value>
+      </item>
+    </select1>
+    <input ref="/tutorial/gps">
+      <label>5. Record your GPS coordinates.</label>
+      <hint>GPS coordinates can only be collected when outside.</hint>
+    </input>
+    <select ref="/tutorial/web_browsers">
+      <label>6. What web browsers do you use?</label>
+      <hint>Select all that apply.</hint>
+      <item>
+        <label>Mozilla Firefox</label>
+        <value>firefox</value>
+      </item>
+      <item>
+        <label>Google Chrome</label>
+        <value>chrome</value>
+      </item>
+      <item>
+        <label>Internet Explorer</label>
+        <value>ie</value>
+      </item>
+      <item>
+        <label>Safari</label>
+        <value>safari</value>
+      </item>
+      <item>
+        <label>None</label>
+        <value>none</value>
+      </item>
+    </select>
+  </h:body>
+</h:html>
