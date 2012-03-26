@@ -40,6 +40,14 @@ To create a database for your development server do the following:
 
     python manage.py migrate
 
+To install sample data for testing:
+    
+    NOTE: You must have created a user in the previous step
+
+    python manage.py install_sample_data <username_created_in_syncdb>
+
+    You can access the sample form and data via http://<your_server_address>:<port>/<username>/forms/good_eats
+
 And now you should be ready to run the server:
 
     python manage.py runserver
