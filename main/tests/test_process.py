@@ -1,12 +1,15 @@
-from test_base import MainTestCase
-from odk_viewer.models import DataDictionary
-from odk_logger.models import XForm
-import os
-import fnmatch
-from odk_viewer.views import xls_export, csv_export
-from django.core.urlresolvers import reverse
 import csv
+import fnmatch
 import json
+import os
+
+from django.core.urlresolvers import reverse
+
+from odk_logger.models import XForm
+from odk_viewer.models import DataDictionary
+from odk_viewer.views import xls_export, csv_export
+from utils.unicode_csv_reader import unicode_csv_reader
+from test_base import MainTestCase
 
 
 class TestSite(MainTestCase):
@@ -213,14 +216,13 @@ class TestSite(MainTestCase):
         self.assertEqual(instance.get_dict(), expected_dict)
 
     def _get_csv_(self):
-        # todo: get the csv.reader to handle unicode as done here:
-        # http://docs.python.org/library/csv.html#examples
-        url = reverse(csv_export, kwargs={'username': self.user.username, 'id_string': self.xform.id_string})
+        url = reverse(csv_export, kwargs={
+                'username': self.user.username,
+                'id_string': self.xform.id_string})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        actual_csv = response.content
-        actual_lines = actual_csv.split("\n")
-        return csv.reader(actual_lines)
+        actual_lines = response.content.split('\n')
+        return unicode_csv_reader(actual_lines)
 
     def _check_csv_export_first_pass(self):
         actual_csv = self._get_csv_()

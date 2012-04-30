@@ -19,7 +19,6 @@ from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 
 import main
-from csv_writer import CsvWriter
 from main.models import UserProfile
 from odk_logger.models import XForm, Instance
 from odk_logger.views import download_jsonform
@@ -152,9 +151,9 @@ def csv_export(request, username, id_string):
         return HttpResponseForbidden('Not shared.')
     rows = [x for x in ParsedInstance.query_mongo(username, id_string, '{}')]
     dframe = DataFrame(rows)
-    # todo split gps, format attachments
+    # TODO split gps, format attachments
     tmp = NamedTemporaryFile()
-    dframe.to_csv(tmp.name)
+    dframe.to_csv(tmp.name, encoding='utf-8')
     response = response_with_mimetype_and_name('application/csv', id_string,
         extension='csv',
         file_path=tmp.name, use_local_filesystem=True)

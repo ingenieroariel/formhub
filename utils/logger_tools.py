@@ -42,15 +42,15 @@ def response_with_mimetype_and_name(mimetype, name, extension=None,
     if not full_mime:
         mimetype = "application/%s" % mimetype
     if file_path:
-        if not use_local_filesystem:
+        if use_local_filesystem:
+            wrapper = FileWrapper(file(file_path))
+            response = HttpResponse(wrapper, mimetype=mimetype)
+            response['Content-Length'] = os.path.getsize(file_path)
+        else:
             default_storage = get_storage_class()()
             wrapper = FileWrapper(default_storage.open(file_path))
             response = HttpResponse(wrapper, mimetype=mimetype)
             response['Content-Length'] = default_storage.size(file_path)
-        else:
-            wrapper = FileWrapper(file(file_path))
-            response = HttpResponse(wrapper, mimetype=mimetype)
-            response['Content-Length'] = os.path.getsize(file_path)
     else:
         response = HttpResponse(mimetype=mimetype)
     response['Content-Disposition'] = disposition_ext_and_date(name, extension, show_date)
