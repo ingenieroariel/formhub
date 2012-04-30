@@ -2,11 +2,12 @@ import json
 import os
 import urllib2
 import zipfile
+from collections import defaultdict
+from datetime import date
+from pandas import DataFrame
 from tempfile import NamedTemporaryFile
 from time import strftime, strptime
-from datetime import date
 from urlparse import urlparse
-from collections import defaultdict
 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -17,7 +18,11 @@ from django.http import HttpResponse, HttpResponseForbidden,\
 from django.shortcuts import render_to_response, get_object_or_404
 from django.template import RequestContext
 
+import main
+from csv_writer import CsvWriter
+from main.models import UserProfile
 from odk_logger.models import XForm, Instance
+from odk_logger.views import download_jsonform
 from odk_logger.xform_instance_parser import xform_instance_to_dict
 from odk_viewer.models import DataDictionary, ParsedInstance
 from pyxform import Section, Question
@@ -25,12 +30,8 @@ from utils.logger_tools import response_with_mimetype_and_name,\
          disposition_ext_and_date, round_down_geopoint
 from utils.viewer_tools import image_urls, image_urls_for_form
 from utils.user_auth import has_permission, get_xform_and_perms
-from main.models import UserProfile
-from csv_writer import CsvWriter
 from xls_writer import XlsWriter
-from odk_logger.views import download_jsonform
 # TODO: using from main.views import api breaks the application, why?
-import main
 
 def encode(time_str):
     time = strptime(time_str, "%Y_%m_%d_%H_%M_%S")
@@ -149,17 +150,14 @@ def csv_export(request, username, id_string):
     xform = XForm.objects.get(id_string=id_string, user=owner)
     if not has_permission(xform, owner, request):
         return HttpResponseForbidden('Not shared.')
-    valid, dd = dd_for_params(id_string, owner, request)
-    if not valid: return dd
-    writer = CsvWriter(dd, dd.get_data_for_excel(), dd.get_keys(),\
-            dd.get_variable_name)
-    file_path = writer.get_default_file_path()
-    writer.write_to_file(file_path)
-    if request.GET.get('raw'):
-        id_string = None
+    rows = [x for x in ParsedInstance.query_mongo(username, id_string, '{}')]
+    dframe = DataFrame(rows)
+    # todo split gps, format attachments
+    tmp = NamedTemporaryFile()
+    dframe.to_csv(tmp.name)
     response = response_with_mimetype_and_name('application/csv', id_string,
         extension='csv',
-        file_path=file_path, use_local_filesystem=True)
+        file_path=tmp.name, use_local_filesystem=True)
     return response
 
 
