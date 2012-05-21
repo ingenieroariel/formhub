@@ -3,6 +3,7 @@ export todos
 
 (0): Re-write
 -------------
+
 * get rid of funkiness in odk_logger/xform_instance_parser (line 68, looking at you)
 
 * choose an intermediate data structure to receive data from mongo -- pandas? 
@@ -22,10 +23,12 @@ export todos
 * re-write the csv/xls/kml export to work off of this intermediate data structure (NOTE: the kml export has a different default for the "replace header names" option above)
 
 QUESTIONS:
+
 * post-parse, in the intermediate data structure, which is built from pre-flattened json: how do we realize that child[0]/name child[1]/name child[2]/name etc. are all fileds that are related to the 'child' attribute, which is a repeat element
 
 (1): Enhancement
 ----------------
+
 * xpath transformations
   
   * [default:on] for type image/video/audio: add a _url column that is that s3 permalink for that piece of media
@@ -44,6 +47,7 @@ QUESTIONS:
 
 (2): Level 2 Enhancement:
 -------------------------
+
 * global transformations
 
   * [default: /] choice of delimeter (stata doesn't deal with / -- has been a consistent complaint from stata users)
