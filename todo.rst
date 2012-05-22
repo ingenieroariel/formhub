@@ -6,9 +6,14 @@ export todos
 
 * get rid of funkiness in odk_logger/xform_instance_parser (line 68, looking at you)
 
-* choose an intermediate data structure to receive data from mongo -- pandas? 
 
-  * the current "default" is jsonlist, which seems inferior because most operations are column-wise
+
+* the intermediate data structure--pandas for now (dict of lists is another possibility)
+
+  * `pandas` advantage: the 'flatten' of repeats, and 'unique by' below get much easier, we might get things like #44 for free as well.
+  * `pandas` disadvantage: adding a lot of import dependencies
+  * dict of lists advantage: simple, no import dependencies
+  * dict of lists disadvantage: see pandas advantage above
 
 * encode all xpath transformations as optional / configurable transformations on that datastructure
 
