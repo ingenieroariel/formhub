@@ -20,7 +20,7 @@ export todos
 
   * time-filtration, as implemented currently, should be kept
 
-* re-write the csv/xls/kml export to work off of this intermediate data structure (NOTE: the kml export has a different default for the "replace header names" option above)
+* re-write the csv/xls/kml export to work off of this intermediate data structure (NOTE: the kml export has a different default for the "replace header names" option below)
 
 QUESTIONS:
 
