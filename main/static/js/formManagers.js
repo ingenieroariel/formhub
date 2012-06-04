@@ -140,7 +140,6 @@ FormResponseManager = function(url, callback)
     this.url = url;
     this.callback = callback;
     this._select_one_filters = [];
-    this._currentSelectOneQuestionName = null; // name of the currently selected "View By Question if any"
 }
 
 // TODO: remove filter generation from within class, it should be application specific, right?
