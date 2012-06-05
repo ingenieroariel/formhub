@@ -1,5 +1,6 @@
 from collections import defaultdict
 from pyxform import Section, Question
+from pyxform.section import GroupedSection
 from odk_viewer.models import DataDictionary
 from utils.export_tools import question_types_to_exclude
 
@@ -97,7 +98,7 @@ class XlsWriter(object):
 
     def _add_sheets(self):
         for e in self._data_dictionary.get_survey_elements():
-            if isinstance(e, Section):
+            if isinstance(e, Section) and not isinstance(e, GroupedSection):
                 sheet_name = e.name
                 self.add_sheet(sheet_name)
                 for f in e.children:
