@@ -1,5 +1,6 @@
 from collections import defaultdict
 from pyxform import Section, Question
+from pyxform.survey import Survey
 from pyxform.section import GroupedSection
 from odk_viewer.models import DataDictionary
 from utils.export_tools import question_types_to_exclude
@@ -10,6 +11,7 @@ class XlsWriter(object):
         self.reset_workbook()
         self.sheet_name_limit = 30
         self._generated_sheet_name_dict = {}
+        self.grouped_section_sheet_names = []
 
     def set_file(self, file_object=None):
         """
@@ -45,19 +47,29 @@ class XlsWriter(object):
     def add_row(self, sheet_name, row):
         i = self._current_index[sheet_name]
         columns = self._columns[sheet_name]
+        print "columns %s" % columns
         for key in row.keys():
             if key not in columns:
                 self.add_column(sheet_name, key)
         for j, column_name in enumerate(self._columns[sheet_name]):
+            #TODO: hack - get 2nd word after slash if any
+            parts = column_name.split("/")
+            if(len(parts)==2):
+                column_name = parts[1]
+            print "column_name %s" % column_name
             self._sheets[sheet_name].write(i, j, row.get(column_name, u"n/a"))
         self._current_index[sheet_name] += 1
 
     def add_obs(self, obs):
         self._fix_indices(obs)
         for sheet_name, rows in obs.items():
+            if(self.grouped_section_sheet_names.count(sheet_name)):
+                sheet_name = self.default_sheet_name
+            print "sheet_name %s" % sheet_name
             for row in rows:
                 actual_sheet_name = self._generated_sheet_name_dict.get(
                         sheet_name, sheet_name)
+                print "row %s" % row
                 self.add_row(actual_sheet_name, row)
 
     def _fix_indices(self, obs):
@@ -94,17 +106,34 @@ class XlsWriter(object):
         self._add_sheets()
         observations = self._data_dictionary.add_surveys()
         for obs in observations:
+            print "obs %s" % obs
             self.add_obs(obs)
 
     def _add_sheets(self):
         for e in self._data_dictionary.get_survey_elements():
-            if isinstance(e, Section) and not isinstance(e, GroupedSection):
-                sheet_name = e.name
+            sheet_name = None
+            if(isinstance(e, Survey)):
+                #TODO: this assumes the Survey element will always be first in for loop
+                sheet_name = self._unique_name_for_xls(e.name)
+                self.default_sheet_name = sheet_name
                 self.add_sheet(sheet_name)
+            elif isinstance(e, Section) and not isinstance(e, GroupedSection):
+                sheet_name = self._unique_name_for_xls(e.name)
+                self.add_sheet(sheet_name)
+
+            if(sheet_name == None):
+                sheet_name = self.default_sheet_name
+
+            if isinstance(e, Section):
                 for f in e.children:
                     if isinstance(f, Question) and\
                             not question_types_to_exclude(f.type):
-                        self.add_column(sheet_name, f.name)
+                        column_prefix = ""
+                        if(isinstance(e, GroupedSection)):
+                            # add to list of groups sheet names to ref later
+                            self.grouped_section_sheet_names.append(e.name)
+                            column_prefix = e.name + "/"
+                        self.add_column(sheet_name, column_prefix + f.name)
 
     def _unique_name_for_xls(self, sheet_name):
         # excel worksheet name limit seems to be 31 characters (30 to be safe)
