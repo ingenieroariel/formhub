@@ -10,7 +10,7 @@ export todos
 
 * the intermediate data structure--pandas for now (dict of lists is another possibility)
 
-  * `pandas` advantage: the 'flatten' of repeats, and 'unique by' below get much easier, we might get things like #44 for free as well.
+  * `pandas` advantage: the 'flatten' of repeats, and 'unique by' below get much easier; built-in to_xls and to_csv functions (which might mean we get things like #44 for free as well).
   * `pandas` disadvantage: adding a lot of import dependencies
   * dict of lists advantage: simple, no import dependencies
   * dict of lists disadvantage: see pandas advantage above
