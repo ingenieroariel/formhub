@@ -5,7 +5,7 @@ var map;
 var layersControl;
 // array of mapbox maps to use as base layers - the first one will be the default map
 var mapboxMaps = [
-    {'label': 'Mapbox Street', 'url': 'http://a.tiles.mapbox.com/v3/modilabs.map-hgm23qjf.jsonp'},
+    {'label': 'Mapbox Streets', 'url': 'http://a.tiles.mapbox.com/v3/modilabs.map-iuetkf9u.jsonp'},
     {'label': 'MapBox Streets Light', 'url': 'http://a.tiles.mapbox.com/v3/modilabs.map-p543gvbh.jsonp'},
     {'label': 'MapBox Streets Zenburn', 'url': 'http://a.tiles.mapbox.com/v3/modilabs.map-bjhr55gf.jsonp'}
 ];
@@ -40,6 +40,7 @@ var legendContainerId = "legend";
 var formJSONMngr = new FormJSONManager(formJSONUrl, loadFormJSONCallback);
 var formResponseMngr = new FormResponseManager(mongoAPIUrl, loadResponseDataCallback);
 var currentLanguageIdx = -1;
+var custAdded = false;
 
 function initialize() {
     // Make a new Leaflet map in your container div
@@ -66,8 +67,12 @@ function initialize() {
             layersControl.addBaseLayer(mapboxstreet, mapData.label);
 
             // only add default layer to map
-            if(idx === 0)
+            if(idx === 0 && !custAdded) {
                 map.addLayer(mapboxstreet);
+            } else if (idx === mapboxMaps.length && custAdded) {
+                map.addLayer(mapboxstreet);
+                $("input[name=leaflet-base-layers]").attr('checked', true);
+            }
         });
     });
 
@@ -89,6 +94,7 @@ function loadFormJSONCallback()
 function loadResponseDataCallback()
 {
     formResponseMngr.callback = null;// initial callback is for setup, subsequent reloads must set desired callback
+    var dropdownLabel, dropdownLink, dropDownContainer, dropDownCaret, dropDownCaretLink, idx;
 
     // get geoJSON data to setup points - relies on questions having been parsed
     var geoJSON = formResponseMngr.getAsGeoJSON();
@@ -102,15 +108,14 @@ function loadResponseDataCallback()
         // add language selector
         if(formJSONMngr.supportedLanguages.length > 1)
         {
-            var dropdownLabel = _createElementAndSetAttrs('li');
-            var dropdownLink = _createElementAndSetAttrs('a', {"href": "#", "class":"language-label"}, "Language");
-            dropdownLabel.appendChild(dropdownLink);
-            navContainer.append(dropdownLabel);
+            $('<li />').html(
+                $('<a />', { text: "Language", href: '#'}).addClass("language-label")
+            ).appendTo(navContainer);
 
-            var dropDownContainer = _createElementAndSetAttrs('li', {"class":"dropdown language-picker"});
-            var dropdownCaretLink = _createElementAndSetAttrs('a', {"href":"#", "class":"dropdown-toggle",
+            dropDownContainer = _createElementAndSetAttrs('li', {"class":"dropdown language-picker"});
+            dropdownCaretLink = _createElementAndSetAttrs('a', {"href":"#", "class":"dropdown-toggle",
                 "data-toggle":"dropdown"});
-            var dropdownCaret = _createElementAndSetAttrs('b', {"class":"caret"});
+            dropdownCaret = _createElementAndSetAttrs('b', {"class":"caret"});
             dropdownCaretLink.appendChild(dropdownCaret);
             dropDownContainer.appendChild(dropdownCaretLink);
 
@@ -118,7 +123,6 @@ function loadResponseDataCallback()
 
             // create links for select one questions
             selectOneQuestions = formJSONMngr.getSelectOneQuestions();
-            var idx;
             for(idx in formJSONMngr.supportedLanguages)
             {
                 var language = getLanguageAt(idx);
@@ -133,7 +137,7 @@ function loadResponseDataCallback()
 
             // attach callbacks
             $('.language-picker a.language').click(function(){
-                var languageIdx = parseInt($(this).attr('data'));
+                var languageIdx = parseInt($(this).attr('data'), 10);
                 setLanguage(languageIdx);
             });
 
@@ -146,15 +150,14 @@ function loadResponseDataCallback()
         // check if we have select one questions
         if(formJSONMngr.getNumSelectOneQuestions() > 0)
         {
-            var dropdownLabel = _createElementAndSetAttrs('li');
-            var dropdownLink = _createElementAndSetAttrs('a', {"href": "#"}, "View By");
-            dropdownLabel.appendChild(dropdownLink);
-            navContainer.append(dropdownLabel);
+            $('<li />').html(
+                $('<a />', { text: "View By", href: '#'})
+            ).appendTo(navContainer);
 
-            var dropDownContainer = _createElementAndSetAttrs('li', {"class":"dropdown"});
-            var dropdownCaretLink = _createElementAndSetAttrs('a', {"href":"#", "class":"dropdown-toggle",
+            dropDownContainer = _createElementAndSetAttrs('li', {"class":"dropdown"});
+            dropdownCaretLink = _createElementAndSetAttrs('a', {"href":"#", "class":"dropdown-toggle",
                 "data-toggle":"dropdown"});
-            var dropdownCaret = _createElementAndSetAttrs('b', {"class":"caret"});
+            dropdownCaret = _createElementAndSetAttrs('b', {"class":"caret"});
             dropdownCaretLink.appendChild(dropdownCaret);
             dropDownContainer.appendChild(dropdownCaretLink);
 
@@ -316,7 +319,7 @@ function _rebuildMarkerLayer(geoJSON, questionName)
     });
 
     /// need this here instead of the constructor so that we can catch the featureparse event
-    refreshHexOverLay(); // TODO: add a toggle to do this only if hexOn = true;
+    _.defer(refreshHexOverLay); // TODO: add a toggle to do this only if hexOn = true;
     geoJsonLayer.addGeoJSON(geoJSON);
     markerLayerGroup.addLayer(geoJsonLayer);
 
@@ -332,49 +335,55 @@ function _rebuildMarkerLayer(geoJSON, questionName)
         map.fitBounds(latlngbounds);
     }
 }
-function _rebuildHexOverLay(hexdata, hex_feature_to_polygon_properties) {
-    hexbinLayerGroup.clearLayers();
-    var arr_to_latlng = function(arr) { return new L.LatLng(arr[0], arr[1]); };
-    var hex_feature_to_polygon_fn = function(el) {
-        return new L.Polygon(_(el.geometry.coordinates).map(arr_to_latlng),
-                                hex_feature_to_polygon_properties(el));
-    };
-    hexbinPolygons = _(hexdata.features).chain()
-                        .map(hex_feature_to_polygon_fn)
-                        .compact()
-                        .value();
-    _(hexbinPolygons).map(function(x) { hexbinLayerGroup.addLayer(x); });
+
+function _reStyleHexOverLay(newHexStylesByID) {
+    _(hexbinLayerGroup._layers).each(function(hexbinLPolygon) {
+        hexID = hexbinLPolygon.options.id;
+        if (newHexStylesByID[hexID])
+            hexbinLPolygon.setStyle(newHexStylesByID[hexID]);
+    });
 }
-//TODO: build new Polygons here, and in _rebuildHexOverLay, just reset the properties
+
 function constructHexBinOverLay() {
     hexbinData = formResponseMngr.getAsHexbinGeoJSON();
-    _rebuildHexOverLay(hexbinData, function() { return {}; });
+    var arr_to_latlng = function(arr) { return new L.LatLng(arr[0], arr[1]); };
+    var hex_feature_to_polygon_fn = function(el) {
+        return new L.Polygon(_(el.geometry.coordinates).map(arr_to_latlng), 
+                            {"id": el.properties.id});
+    };
+    _(hexbinData.features).each( function(x) {
+        hexbinLayerGroup.addLayer(hex_feature_to_polygon_fn(x)); 
+    });
 }
 
 function _recomputeHexColorsByRatio(questionName, responseNames) {
+    var newHexStyles = {};
     if (_(responseNames).contains(notSpecifiedCaption)) 
         responseNames.push(undefined); // hack? if notSpeciedCaption is in repsonseNames, then need to
         // count when instance.response[questionName] doesn't exist, and is therefore ``undefined''
-    var hex_feature_to_polygon_properties = function(el) {
-        // TODO: remove rawdata from properties, go through formJSONManager or somesuch instead
-        var numerator = _.reduce(el.properties.rawdata, function(numer, instance) {
-                            return numer + (_.contains(responseNames, instance.response[questionName]) ? 1 : 0);
-                        }, 0.0);
-        var denominator = el.properties.rawdata.length;
-        var color = getProportionalColor(numerator / denominator, "greens");
-        return { fillColor: color, fillOpacity: 0.9, color: 'grey', weight: 1 };
-                   
-    };
-    _rebuildHexOverLay(hexbinData, hex_feature_to_polygon_properties);
+    
+    var hexAndCountArrayNum = formResponseMngr.dvQuery({dims: ['hexID'], vals:[dv.count()], where:
+        function(table, row) { return _.contains(responseNames, table.get(questionName, row)); }});
+    var hexAndCountArrayDenom = formResponseMngr.dvQuery({dims:['hexID'], vals:[dv.count()]});      
+
+    _(hexAndCountArrayDenom[0]).each( function(hexID, idx) {
+        // note both are dense queries on datavore, the idx's match exactly
+        var ratio = hexAndCountArrayNum[1][idx] / hexAndCountArrayDenom[1][idx];
+        newHexStyles[hexID] = {  fillColor: getProportionalColor(ratio, "greens") };
+    });
+    _reStyleHexOverLay(newHexStyles);
 }
 
 function _hexOverLayByCount()
 {
-    var hex_feature_to_polygon_properties = function(el) {
-        var color = getProportionalColor(el.properties.count / (el.properties.countMax * 1.2));
-        return {fillColor: color, fillOpacity: 0.9, color:'grey', weight: 1};
-    };
-    _rebuildHexOverLay(hexbinData, hex_feature_to_polygon_properties);
+    var newHexStyles = {};
+    var hexAndCountArray = formResponseMngr.dvQuery({dims:['hexID'], vals:[dv.count()]});      
+    var totalCount = _.max(hexAndCountArray[1]);
+    _(hexAndCountArray[0]).each( function(hexID, idx) {
+        var color = getProportionalColor(hexAndCountArray[1][idx] / totalCount); 
+        newHexStyles[hexID] = {fillColor: color, fillOpacity: 0.9, color:'grey', weight: 1};
+    }); 
+    _reStyleHexOverLay(newHexStyles);
 }
 
 function refreshHexOverLay() { // refresh hex overlay, in any map state
@@ -441,9 +450,9 @@ function JSONSurveyToHTML(data)
                 var style = "";
                 if(idx != currentLanguageIdx)
                 {
-                    style = "display: none"
+                    style = "display: none";
                 }
-                var span = _createElementAndSetAttrs('span', {"class": ("language language-" + idx), "style": style}, formJSONMngr.getMultilingualLabel(question, language));
+                span = _createElementAndSetAttrs('span', {"class": ("language language-" + idx), "style": style}, formJSONMngr.getMultilingualLabel(question, language));
                 td.appendChild(span);
             }
 
@@ -466,7 +475,7 @@ function getLanguageAt(idx)
 
 function rebuildLegend(questionName, questionColorMap)
 {
-    var response;
+    var response, language, spanAttrs;
     // TODO: consider creating container once and keeping a variable reference
     var question = formJSONMngr.getQuestionByName(questionName);
     var choices = formJSONMngr.getChoices(question);
@@ -490,10 +499,10 @@ function rebuildLegend(questionName, questionColorMap)
     var i;
     for(i=0;i<formJSONMngr.supportedLanguages.length;i++)
     {
-        var language = getLanguageAt(i);
-        var spanAttrs = {"class":("language language-" + i)};
+        language = getLanguageAt(i);
+        spanAttrs = {"class":("language language-" + i)};
         if(i != currentLanguageIdx)
-            spanAttrs["style"] = "display:none;";
+            spanAttrs.style = "display:none;";
         var questionLabel = formJSONMngr.getMultilingualLabel(question, language);
         var titleSpan = _createElementAndSetAttrs('span', spanAttrs, questionLabel);
         legendTitle.appendChild(titleSpan);
@@ -525,13 +534,13 @@ function rebuildLegend(questionName, questionColorMap)
         for(i=0;i<formJSONMngr.supportedLanguages.length;i++)
         {
             var itemLabel = response;
-            var language = getLanguageAt(i);
+            language = getLanguageAt(i);
             // check if the choices contain this response before we try to get the reponse's label
             if(choices.hasOwnProperty(response))
                 itemLabel = formJSONMngr.getMultilingualLabel(choices[response], language);
-            var spanAttrs = {"class":("item-label language language-" + i)};
+            spanAttrs = {"class":("item-label language language-" + i)};
             if(i != currentLanguageIdx)
-                spanAttrs["style"] = "display:none";
+                spanAttrs.style = "display:none";
             var responseText = _createElementAndSetAttrs('span', spanAttrs, itemLabel);
             legendAnchor.appendChild(responseText);
         }
@@ -552,7 +561,7 @@ function rebuildLegend(questionName, questionColorMap)
         // reload with new params
         formResponseMngr.callback = filterSelectOneCallback;
         fields = getBootstrapFields();
-        formResponseMngr.loadResponseData({}, 0, null, fields)
+        formResponseMngr.loadResponseData({}, 0, null, fields);
         formResponseMngr.loadResponseData({});
         refreshHexOverLay();
     });
@@ -564,17 +573,19 @@ function rebuildLegend(questionName, questionColorMap)
 function getBootstrapFields()
 {
     // we only want to load gps and select one data to begin with
-    fields = [];
+    var fields = [];
+    var idx, question;
+    if(!constants) throw "ERROR: constants not found; please include main/static/js/formManagers.js"; 
     for(idx in formJSONMngr.selectOneQuestions)
     {
-        var question = formJSONMngr.selectOneQuestions[idx];
-        fields.push(question["name"]);
+        question = formJSONMngr.selectOneQuestions[idx];
+        fields.push(question[constants.NAME]);
     }
 
     for(idx in formJSONMngr.geopointQuestions)
     {
-        var question = formJSONMngr.geopointQuestions[idx];
-        fields.push(question["name"]);
+        question = formJSONMngr.geopointQuestions[idx];
+        fields.push(question[constants.NAME]);
     }
     return fields;
 }
@@ -620,7 +631,7 @@ function _createSelectOneLi(question)
         var questionLabel = formJSONMngr.getMultilingualLabel(question, language);
         var spanAttrs = {"class":("language language-" + i)};
         if(i != currentLanguageIdx)
-            spanAttrs["style"] = "display:none";
+            spanAttrs.style = "display:none";
         var languageSpan = _createElementAndSetAttrs("span", spanAttrs, questionLabel);
         questionLink.appendChild(languageSpan);
     }

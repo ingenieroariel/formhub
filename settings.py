@@ -6,6 +6,7 @@ from pymongo import Connection
 
 CURRENT_FILE = os.path.abspath(__file__)
 PROJECT_ROOT = os.path.dirname(CURRENT_FILE)
+PRINT_EXCEPTION = False
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -194,6 +195,13 @@ GOOGLE_STEP2_URI = 'http://formhub.org/gwelcome'
 GOOGLE_CLIENT_ID = '617113120802.apps.googleusercontent.com'
 GOOGLE_CLIENT_SECRET = '9reM29qpGFPyI8TBuB54Z4fk'
 
+# Changing the keys here will change order of evaluation and break functionality
+# Place additional keys inorder both alphabeticall and in descending size 
+THUMB_CONF = {'large' : {'size': 1280, 'suffix': '-lrg'},
+              'medium' : {'size': 640, 'suffix': '-med'},
+              'smaller' : {'size': 240, 'suffix': '-sml'}
+             }
+
 TESTING_MODE = False
 if len(sys.argv)>=2 and (sys.argv[1]=="test" or sys.argv[1]=="test_all"):
     # This trick works only when we run tests from the command line.
@@ -217,5 +225,5 @@ except ImportError:
     print("You can override the default settings by adding a "
           "local_settings.py file.")
 
-if DEBUG:
+if PRINT_EXCEPTION and DEBUG:
     MIDDLEWARE_CLASSES += ('utils.middleware.ExceptionLoggingMiddleware',)
