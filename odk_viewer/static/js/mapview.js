@@ -5,9 +5,9 @@ var map;
 var layersControl;
 // array of mapbox maps to use as base layers - the first one will be the default map
 var mapboxMaps = [
-    {'label': 'Mapbox Streets', 'url': 'http://a.tiles.mapbox.com/v3/modilabs.map-iuetkf9u.jsonp'},
-    {'label': 'MapBox Streets Light', 'url': 'http://a.tiles.mapbox.com/v3/modilabs.map-p543gvbh.jsonp'},
-    {'label': 'MapBox Streets Zenburn', 'url': 'http://a.tiles.mapbox.com/v3/modilabs.map-bjhr55gf.jsonp'}
+    {'label': 'Mapbox Streets', 'url': 'https://a.tiles.mapbox.com/v3/modilabs.map-iuetkf9u.jsonp'},
+    {'label': 'MapBox Streets Light', 'url': 'https://a.tiles.mapbox.com/v3/modilabs.map-p543gvbh.jsonp'},
+    {'label': 'MapBox Streets Zenburn', 'url': 'https://a.tiles.mapbox.com/v3/modilabs.map-bjhr55gf.jsonp'}
 ];
 var allowResetZoomLevel = true; // used to allow zooming when first loaded
 var popupOffset = new L.Point(0, -10);
