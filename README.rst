@@ -36,13 +36,13 @@ Install system libraries and start services::
 
 You can browse the site at: http://localhost:8000/
 
-.. note::
+..note::
 
     If you are using a remote server, or need to access it via an intranet, do::
 
-        python manage.py runserver 0.0.0.0:8000
+        sudo python manage.py runserver 0.0.0.0:80
 
-    and navigate to: http://yourownaddress:8000/
+    and navigate to: http://yourownaddress.com/
 
 
 Contributing
